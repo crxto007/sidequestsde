@@ -229,7 +229,14 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      lookup_group_by_invite_code: {
+        Args: { code: string }
+        Returns: {
+          group_id: string
+          group_name: string
+          member_count: number
+        }[]
+      }
     }
     Enums: {
       quest_status: "active" | "completed" | "expired"
