@@ -102,7 +102,6 @@ export default function UploadPage() {
 
     await supabase.from('active_quests').update({ status: 'completed', completed_at: new Date().toISOString() }).eq('id', activeQuest.id);
 
-    await supabase.rpc('', {}).catch(() => {});
     // Update points directly
     const { data: currentProfile } = await supabase.from('profiles').select('points').eq('id', user.id).single();
     const newPoints = (currentProfile?.points ?? 0) + quest.points_value;
