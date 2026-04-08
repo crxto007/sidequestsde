@@ -14,7 +14,216 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      active_quests: {
+        Row: {
+          completed_at: string | null
+          expires_at: string
+          group_id: string
+          id: string
+          quest_id: string
+          started_at: string
+          status: Database["public"]["Enums"]["quest_status"]
+          user_id: string
+        }
+        Insert: {
+          completed_at?: string | null
+          expires_at?: string
+          group_id: string
+          id?: string
+          quest_id: string
+          started_at?: string
+          status?: Database["public"]["Enums"]["quest_status"]
+          user_id: string
+        }
+        Update: {
+          completed_at?: string | null
+          expires_at?: string
+          group_id?: string
+          id?: string
+          quest_id?: string
+          started_at?: string
+          status?: Database["public"]["Enums"]["quest_status"]
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "active_quests_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "active_quests_quest_id_fkey"
+            columns: ["quest_id"]
+            isOneToOne: false
+            referencedRelation: "quests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "active_quests_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      group_members: {
+        Row: {
+          group_id: string
+          id: string
+          joined_at: string
+          user_id: string
+        }
+        Insert: {
+          group_id: string
+          id?: string
+          joined_at?: string
+          user_id: string
+        }
+        Update: {
+          group_id?: string
+          id?: string
+          joined_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "group_members_group_id_fkey"
+            columns: ["group_id"]
+            isOneToOne: false
+            referencedRelation: "groups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "group_members_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      groups: {
+        Row: {
+          created_at: string
+          created_by: string
+          id: string
+          invite_code: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          created_by: string
+          id?: string
+          invite_code: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          created_by?: string
+          id?: string
+          invite_code?: string
+          name?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "groups_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          id: string
+          points: number
+          username: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          id: string
+          points?: number
+          username: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          id?: string
+          points?: number
+          username?: string
+        }
+        Relationships: []
+      }
+      quest_proofs: {
+        Row: {
+          active_quest_id: string
+          id: string
+          image_url: string
+          uploaded_at: string
+          user_id: string
+        }
+        Insert: {
+          active_quest_id: string
+          id?: string
+          image_url: string
+          uploaded_at?: string
+          user_id: string
+        }
+        Update: {
+          active_quest_id?: string
+          id?: string
+          image_url?: string
+          uploaded_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "quest_proofs_active_quest_id_fkey"
+            columns: ["active_quest_id"]
+            isOneToOne: false
+            referencedRelation: "active_quests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "quest_proofs_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      quests: {
+        Row: {
+          category: string
+          description: string
+          id: string
+          points_value: number
+          title: string
+        }
+        Insert: {
+          category: string
+          description: string
+          id?: string
+          points_value: number
+          title: string
+        }
+        Update: {
+          category?: string
+          description?: string
+          id?: string
+          points_value?: number
+          title?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -23,7 +232,7 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      quest_status: "active" | "completed" | "expired"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +359,8 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      quest_status: ["active", "completed", "expired"],
+    },
   },
 } as const
