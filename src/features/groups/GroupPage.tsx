@@ -83,24 +83,19 @@ export default function GroupPage() {
     if (!user || !inviteCode.trim()) return;
     setSubmitting(true);
 
-    const { data: group, error } = await supabase
-      .from('groups')
-      .select('*')
-      .eq('invite_code', inviteCode.trim().toUpperCase())
-      .single();
+    // Use secure RPC to look up group by invite code (no direct table access)
+    const { data: results, error } = await supabase
+      .rpc('lookup_group_by_invite_code', { code: inviteCode.trim().toUpperCase() });
 
-    if (error || !group) {
+    if (error || !results || results.length === 0) {
       toast.error('Invalid invite code');
       setSubmitting(false);
       return;
     }
 
-    const { data: existingMembers } = await supabase
-      .from('group_members')
-      .select('id')
-      .eq('group_id', group.id);
+    const { group_id, member_count } = results[0];
 
-    if (existingMembers && existingMembers.length >= 5) {
+    if (member_count >= 5) {
       toast.error('Group is full (max 5 members)');
       setSubmitting(false);
       return;
@@ -108,7 +103,7 @@ export default function GroupPage() {
 
     const { error: joinError } = await supabase
       .from('group_members')
-      .insert({ group_id: group.id, user_id: user.id });
+      .insert({ group_id, user_id: user.id });
 
     if (joinError) {
       toast.error('Failed to join group');

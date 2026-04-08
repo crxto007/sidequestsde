@@ -92,12 +92,11 @@ export default function UploadPage() {
       return;
     }
 
-    const { data: urlData } = supabase.storage.from('quest-proofs').getPublicUrl(filePath);
-
+    // Store the file path (not a public URL) since the bucket is private
     await supabase.from('quest_proofs').insert({
       active_quest_id: activeQuest.id,
       user_id: user.id,
-      image_url: urlData.publicUrl,
+      image_url: filePath,
     });
 
     await supabase.from('active_quests').update({ status: 'completed', completed_at: new Date().toISOString() }).eq('id', activeQuest.id);
