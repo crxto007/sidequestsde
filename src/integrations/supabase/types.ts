@@ -229,6 +229,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_group: {
+        Args: { p_invite_code: string; p_name: string }
+        Returns: string
+      }
       join_group: { Args: { p_invite_code: string }; Returns: string }
       lookup_group_by_invite_code: {
         Args: { code: string }
