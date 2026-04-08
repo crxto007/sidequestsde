@@ -59,11 +59,10 @@ export default function GroupPage() {
     setSubmitting(true);
 
     const code = generateCode();
-    const { data: group, error } = await supabase
-      .from('groups')
-      .insert({ name: groupName.trim(), invite_code: code, created_by: user.id })
-      .select()
-      .single();
+    const { error } = await supabase.rpc('create_group', {
+      p_name: groupName.trim(),
+      p_invite_code: code,
+    });
 
     if (error) {
       toast.error('Failed to create group');
@@ -71,7 +70,6 @@ export default function GroupPage() {
       return;
     }
 
-    await supabase.from('group_members').insert({ group_id: group.id, user_id: user.id });
     toast.success('Group created!');
     await fetchGroup();
     setSubmitting(false);
@@ -83,30 +81,15 @@ export default function GroupPage() {
     if (!user || !inviteCode.trim()) return;
     setSubmitting(true);
 
-    // Use secure RPC to look up group by invite code (no direct table access)
-    const { data: results, error } = await supabase
-      .rpc('lookup_group_by_invite_code', { code: inviteCode.trim().toUpperCase() });
+    const { error } = await supabase.rpc('join_group', {
+      p_invite_code: inviteCode.trim().toUpperCase(),
+    });
 
-    if (error || !results || results.length === 0) {
-      toast.error('Invalid invite code');
-      setSubmitting(false);
-      return;
-    }
-
-    const { group_id, member_count } = results[0];
-
-    if (member_count >= 5) {
-      toast.error('Group is full (max 5 members)');
-      setSubmitting(false);
-      return;
-    }
-
-    const { error: joinError } = await supabase
-      .from('group_members')
-      .insert({ group_id, user_id: user.id });
-
-    if (joinError) {
-      toast.error('Failed to join group');
+    if (error) {
+      const msg = error.message?.includes('full') ? 'Group is full (max 5 members)'
+        : error.message?.includes('Invalid') ? 'Invalid invite code'
+        : 'Failed to join group';
+      toast.error(msg);
       setSubmitting(false);
       return;
     }
