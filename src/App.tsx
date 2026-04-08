@@ -12,16 +12,25 @@ import ProfilePage from "@/features/profile/ProfilePage";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import BottomNav from "@/components/BottomNav";
 import NotFound from "./pages/NotFound";
+import { Loader2 } from "lucide-react";
 
 const queryClient = new QueryClient();
 
 function AppRoutes() {
   const { user, loading } = useAuth();
 
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <>
       <Routes>
-        <Route path="/" element={user && !loading ? <Navigate to="/group" replace /> : <LoginPage />} />
+        <Route path="/" element={user ? <Navigate to="/group" replace /> : <LoginPage />} />
         <Route path="/group" element={<ProtectedRoute><GroupPage /></ProtectedRoute>} />
         <Route path="/quest" element={<ProtectedRoute><QuestPage /></ProtectedRoute>} />
         <Route path="/upload" element={<ProtectedRoute><UploadPage /></ProtectedRoute>} />
