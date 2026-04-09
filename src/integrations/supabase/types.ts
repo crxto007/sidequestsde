@@ -229,7 +229,19 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      create_group: {
+        Args: { p_invite_code: string; p_name: string }
+        Returns: string
+      }
+      join_group: { Args: { p_invite_code: string }; Returns: string }
+      lookup_group_by_invite_code: {
+        Args: { code: string }
+        Returns: {
+          group_id: string
+          group_name: string
+          member_count: number
+        }[]
+      }
     }
     Enums: {
       quest_status: "active" | "completed" | "expired"
