@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'framer-motion';
 import { Zap, Loader2, Mail } from 'lucide-react';
-import { useAuth } from './AuthContext';
+import { useAuth } from './useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 

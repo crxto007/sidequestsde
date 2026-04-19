@@ -1,6 +1,6 @@
 import { motion } from 'framer-motion';
 import { LogOut, Zap } from 'lucide-react';
-import { useAuth } from '@/features/auth/AuthContext';
+import { useAuth } from '@/features/auth/useAuth';
 import { Button } from '@/components/ui/button';
 import { useNavigate } from 'react-router-dom';
 

@@ -3,7 +3,8 @@ import { BrowserRouter, Route, Routes, Navigate } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { AuthProvider, useAuth } from "@/features/auth/AuthContext";
+import { AuthProvider } from "@/features/auth/AuthContext";
+import { useAuth } from "@/features/auth/useAuth";
 import LoginPage from "@/features/auth/LoginPage";
 import GroupPage from "@/features/groups/GroupPage";
 import QuestPage from "@/features/quests/QuestPage";
@@ -17,6 +18,7 @@ const queryClient = new QueryClient();
 
 function AppRoutes() {
   const { user, loading } = useAuth();
+  console.log('AppRoutes render - user:', user?.email, 'loading:', loading);
 
   return (
     <>

@@ -1,9 +1,9 @@
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useEffect, useState, ReactNode } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase } from '@/lib/supabase';
 import { Profile } from '@/types';
 
-interface AuthContextType {
+export interface AuthContextType {
   session: Session | null;
   user: User | null;
   profile: Profile | null;
@@ -14,7 +14,7 @@ interface AuthContextType {
   refreshProfile: () => Promise<void>;
 }
 
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
+export const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
@@ -23,12 +23,21 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const fetchProfile = async (userId: string) => {
-    const { data } = await supabase.from('profiles').select('*').eq('id', userId).single();
-    if (data) setProfile(data);
+    console.log('Fetching profile for user:', userId);
+    const { data, error } = await supabase.from('profiles').select('*').eq('id', userId).single();
+    if (error) {
+      console.error('Profile fetch error:', error);
+    }
+    if (data) {
+      console.log('Profile loaded:', data);
+      setProfile(data);
+    }
   };
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+    console.log('AuthProvider mounting...');
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session?.user?.email);
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -39,7 +48,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setLoading(false);
     });
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    supabase.auth.getSession().then(({ data: { session }, error }) => {
+      console.log('Initial session check:', session?.user?.email, 'error:', error);
       setSession(session);
       setUser(session?.user ?? null);
       if (session?.user) {
@@ -79,10 +89,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       {children}
     </AuthContext.Provider>
   );
-}
-
-export function useAuth() {
-  const context = useContext(AuthContext);
-  if (!context) throw new Error('useAuth must be used within AuthProvider');
-  return context;
 }
