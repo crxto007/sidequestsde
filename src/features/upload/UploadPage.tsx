@@ -25,25 +25,37 @@ export default function UploadPage() {
 
   useEffect(() => {
     const init = async () => {
-      if (!user) return;
-
-      const { data: aq } = await supabase
-        .from('active_quests')
-        .select('*, quests(*)')
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-        .order('started_at', { ascending: false })
-        .limit(1)
-        .single();
-
-      if (!aq) {
-        navigate('/quest');
+      if (!user) {
+        setLoading(false);
         return;
       }
 
-      setActiveQuest(aq);
-      setQuest(aq.quests as unknown as Quest);
-      setLoading(false);
+      try {
+        const { data: aq, error } = await supabase
+          .from('active_quests')
+          .select('*, quests(*)')
+          .eq('user_id', user.id)
+          .eq('status', 'active')
+          .order('started_at', { ascending: false })
+          .limit(1)
+          .single();
+
+        if (error && error.code !== 'PGRST116') {
+          console.error('Active quest fetch error:', error);
+        }
+
+        if (!aq) {
+          navigate('/quest');
+          return;
+        }
+
+        setActiveQuest(aq);
+        setQuest(aq.quests as unknown as Quest);
+      } catch (err) {
+        console.error('Unexpected error:', err);
+      } finally {
+        setLoading(false);
+      }
     };
     init();
   }, [user, navigate]);

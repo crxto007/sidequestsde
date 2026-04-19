@@ -19,39 +19,58 @@ export default function QuestPage() {
 
   useEffect(() => {
     const init = async () => {
-      if (!user) return;
-
-      // Check for active quest
-      const { data: activeQuest } = await supabase
-        .from('active_quests')
-        .select('*')
-        .eq('user_id', user.id)
-        .eq('status', 'active')
-        .gt('expires_at', new Date().toISOString())
-        .single();
-
-      if (activeQuest) {
-        navigate('/upload');
+      if (!user) {
+        setLoading(false);
         return;
       }
 
-      // Get user's group
-      const { data: membership } = await supabase
-        .from('group_members')
-        .select('group_id')
-        .eq('user_id', user.id)
-        .single();
+      try {
+        // Check for active quest
+        const { data: activeQuest, error: activeError } = await supabase
+          .from('active_quests')
+          .select('*')
+          .eq('user_id', user.id)
+          .eq('status', 'active')
+          .gt('expires_at', new Date().toISOString())
+          .single();
 
-      if (!membership) {
-        navigate('/group');
-        return;
+        if (activeError && activeError.code !== 'PGRST116') {
+          console.error('Active quest fetch error:', activeError);
+        }
+
+        if (activeQuest) {
+          navigate('/upload');
+          return;
+        }
+
+        // Get user's group
+        const { data: membership, error: membershipError } = await supabase
+          .from('group_members')
+          .select('group_id')
+          .eq('user_id', user.id)
+          .single();
+
+        if (membershipError) {
+          console.error('Membership fetch error:', membershipError);
+        }
+
+        if (!membership) {
+          navigate('/group');
+          return;
+        }
+        setGroupId(membership.group_id);
+
+        // Fetch quests
+        const { data: questData, error: questError } = await supabase.from('quests').select('*');
+        if (questError) {
+          console.error('Quests fetch error:', questError);
+        }
+        setQuests(questData ?? []);
+      } catch (err) {
+        console.error('Unexpected error:', err);
+      } finally {
+        setLoading(false);
       }
-      setGroupId(membership.group_id);
-
-      // Fetch quests
-      const { data: questData } = await supabase.from('quests').select('*');
-      setQuests(questData ?? []);
-      setLoading(false);
     };
     init();
   }, [user, navigate]);

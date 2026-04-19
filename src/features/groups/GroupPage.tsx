@@ -23,30 +23,57 @@ export default function GroupPage() {
   const [copied, setCopied] = useState(false);
 
   const fetchGroup = async () => {
-    if (!user) return;
+    if (!user) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
 
-    const { data: memberships } = await supabase
-      .from('group_members')
-      .select('group_id')
-      .eq('user_id', user.id);
+    try {
+      const { data: memberships, error: membershipError } = await supabase
+        .from('group_members')
+        .select('group_id')
+        .eq('user_id', user.id);
 
-    if (memberships && memberships.length > 0) {
-      const groupId = memberships[0].group_id;
-      const { data: group } = await supabase.from('groups').select('*').eq('id', groupId).single();
-      if (group) {
-        setMyGroup(group);
-        const { data: groupMembers } = await supabase
-          .from('group_members')
-          .select('*, profiles(*)')
-          .eq('group_id', groupId);
-        setMembers(groupMembers ?? []);
+      if (membershipError) {
+        console.error('Membership fetch error:', membershipError);
+        setLoading(false);
+        return;
       }
+
+      if (memberships && memberships.length > 0) {
+        const groupId = memberships[0].group_id;
+        const { data: group, error: groupError } = await supabase.from('groups').select('*').eq('id', groupId).single();
+
+        if (groupError) {
+          console.error('Group fetch error:', groupError);
+          setLoading(false);
+          return;
+        }
+
+        if (group) {
+          setMyGroup(group);
+          const { data: groupMembers, error: membersError } = await supabase
+            .from('group_members')
+            .select('*, profiles(*)')
+            .eq('group_id', groupId);
+
+          if (membersError) {
+            console.error('Members fetch error:', membersError);
+          }
+          setMembers(groupMembers ?? []);
+        }
+      }
+    } catch (err) {
+      console.error('Unexpected error fetching group:', err);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
 
-  useEffect(() => { fetchGroup(); }, [user]);
+  useEffect(() => {
+    fetchGroup();
+  }, [user]);
 
   const generateCode = () => {
     const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
@@ -59,6 +86,8 @@ export default function GroupPage() {
     setSubmitting(true);
 
     const code = generateCode();
+    console.log('Creating group with:', { name: groupName.trim(), invite_code: code, created_by: user.id });
+
     const { data: group, error } = await supabase
       .from('groups')
       .insert({ name: groupName.trim(), invite_code: code, created_by: user.id })
@@ -66,13 +95,23 @@ export default function GroupPage() {
       .single();
 
     if (error) {
-      toast.error('Failed to create group');
+      console.error('Group creation error:', error);
+      toast.error(`Failed to create group: ${error.message}`);
       setSubmitting(false);
       return;
     }
 
-    await supabase.from('group_members').insert({ group_id: group.id, user_id: user.id });
-    toast.success('Group created!');
+    console.log('Group created:', group);
+
+    const { error: memberError } = await supabase.from('group_members').insert({ group_id: group.id, user_id: user.id });
+
+    if (memberError) {
+      console.error('Member creation error:', memberError);
+      toast.error(`Group created but failed to add you: ${memberError.message}`);
+    } else {
+      toast.success('Group created!');
+    }
+
     await fetchGroup();
     setSubmitting(false);
     setShowCreate(false);
