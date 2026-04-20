@@ -6,7 +6,18 @@ import { useAuth } from '@/features/auth/useAuth';
 import { supabase } from '@/lib/supabase';
 import { Button } from '@/components/ui/button';
 import { toast } from 'sonner';
-import { ActiveQuest, Quest } from '@/types';
+
+interface ActiveQuest {
+  id: string;
+  user_id: string;
+  quest_id: string;
+  quest_title: string;
+  quest_description: string;
+  points_value: number;
+  status: 'active' | 'completed' | 'expired';
+  expires_at: string;
+  completed_at: string | null;
+}
 
 export default function UploadPage() {
   const { user, refreshProfile } = useAuth();
@@ -14,7 +25,6 @@ export default function UploadPage() {
   const fileRef = useRef<HTMLInputElement>(null);
   const [loading, setLoading] = useState(true);
   const [activeQuest, setActiveQuest] = useState<ActiveQuest | null>(null);
-  const [quest, setQuest] = useState<Quest | null>(null);
   const [timeLeft, setTimeLeft] = useState('');
   const [expired, setExpired] = useState(false);
   const [file, setFile] = useState<File | null>(null);
@@ -33,7 +43,7 @@ export default function UploadPage() {
       try {
         const { data: aq, error } = await supabase
           .from('active_quests')
-          .select('*, quests(*)')
+          .select('*')
           .eq('user_id', user.id)
           .eq('status', 'active')
           .order('started_at', { ascending: false })
@@ -50,7 +60,6 @@ export default function UploadPage() {
         }
 
         setActiveQuest(aq);
-        setQuest(aq.quests as unknown as Quest);
       } catch (err) {
         console.error('Unexpected error:', err);
       } finally {
@@ -92,7 +101,7 @@ export default function UploadPage() {
   };
 
   const handleSubmit = async () => {
-    if (!file || !activeQuest || !quest || !user) return;
+    if (!file || !activeQuest || !user) return;
     setSubmitting(true);
 
     const filePath = `${user.id}/${activeQuest.id}.jpg`;
@@ -116,10 +125,10 @@ export default function UploadPage() {
 
     // Update points directly
     const { data: currentProfile } = await supabase.from('profiles').select('points').eq('id', user.id).single();
-    const newPoints = (currentProfile?.points ?? 0) + quest.points_value;
+    const newPoints = (currentProfile?.points ?? 0) + activeQuest.points_value;
     await supabase.from('profiles').update({ points: newPoints }).eq('id', user.id);
 
-    setEarnedPoints(quest.points_value);
+    setEarnedPoints(activeQuest.points_value);
     setCompleted(true);
     setSubmitting(false);
     await refreshProfile();
@@ -149,8 +158,8 @@ export default function UploadPage() {
         </motion.div>
         <h1 className="text-3xl font-bold text-foreground mb-2">Quest Complete!</h1>
         <p className="text-primary text-xl font-bold mb-8">+{earnedPoints} pts</p>
-        <Button variant="accent" size="xl" className="w-full max-w-xs" onClick={() => navigate('/group')}>
-          Back to Group
+        <Button variant="accent" size="xl" className="w-full max-w-xs" onClick={() => navigate('/quest')}>
+          Next Quest →
         </Button>
       </motion.div>
     );
@@ -160,11 +169,11 @@ export default function UploadPage() {
     <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.2 }} className="flex flex-col min-h-screen px-6 pt-12 pb-24">
       {/* Quest card */}
       <div className="bg-card rounded-xl border border-border p-5 mb-6">
-        <h2 className="text-lg font-bold text-foreground">{quest?.title}</h2>
-        <p className="text-muted-foreground text-sm mt-1">{quest?.description}</p>
+        <h2 className="text-lg font-bold text-foreground">{activeQuest?.quest_title}</h2>
+        <p className="text-muted-foreground text-sm mt-1">{activeQuest?.quest_description}</p>
         <div className="flex items-center justify-between mt-4">
           <span className="bg-primary/20 text-primary text-xs font-bold px-2.5 py-1 rounded-full">
-            {quest?.points_value} pts
+            {activeQuest?.points_value} pts
           </span>
           {expired ? (
             <span className="text-destructive text-sm font-medium flex items-center gap-1">

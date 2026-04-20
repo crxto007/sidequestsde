@@ -6,22 +6,6 @@ export interface Profile {
   created_at: string;
 }
 
-export interface Group {
-  id: string;
-  name: string;
-  invite_code: string;
-  created_by: string;
-  created_at: string;
-}
-
-export interface GroupMember {
-  id: string;
-  group_id: string;
-  user_id: string;
-  joined_at: string;
-  profiles?: Profile;
-}
-
 export interface Quest {
   id: string;
   title: string;
@@ -35,13 +19,14 @@ export type QuestStatus = 'active' | 'completed' | 'expired';
 export interface ActiveQuest {
   id: string;
   user_id: string;
-  group_id: string;
   quest_id: string;
+  quest_title: string;
+  quest_description: string;
+  points_value: number;
   status: QuestStatus;
   started_at: string;
   expires_at: string;
   completed_at: string | null;
-  quests?: Quest;
 }
 
 export interface QuestProof {

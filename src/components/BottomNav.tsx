@@ -1,9 +1,8 @@
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Users, Zap, User } from 'lucide-react';
+import { Zap, User } from 'lucide-react';
 import { useAuth } from '@/features/auth/useAuth';
 
 const tabs = [
-  { path: '/group', icon: Users, label: 'Home' },
   { path: '/quest', icon: Zap, label: 'Quest' },
   { path: '/profile', icon: User, label: 'Profile' },
 ];

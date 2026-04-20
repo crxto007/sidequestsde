@@ -31,7 +31,7 @@ export default function LoginPage() {
     } else if (isSignUp) {
       setShowConfirmation(true);
     } else {
-      navigate('/group');
+      navigate('/quest');
     }
     setLoading(false);
   };

@@ -36,6 +36,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     console.log('AuthProvider mounting...');
+    console.log('Supabase URL:', import.meta.env.VITE_SUPABASE_URL);
+
+    // Test connection
+    supabase.from('quests').select('count', { count: 'exact', head: true }).then(({ error }) => {
+      if (error) console.error('Supabase connection test failed:', error);
+      else console.log('Supabase connection OK');
+    });
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event, session?.user?.email);
       setSession(session);
@@ -71,7 +79,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   };
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({ email, password });
+    console.log('Attempting sign in for:', email);
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    console.log('Sign in result:', { user: data?.user?.email, error: error?.message, status: error?.status });
+    if (error?.message?.includes('Email not confirmed')) {
+      return { error: 'Please confirm your email before logging in. Check your inbox.' };
+    }
     return { error: error?.message ?? null };
   };
 

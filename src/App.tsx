@@ -6,7 +6,6 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/features/auth/AuthContext";
 import { useAuth } from "@/features/auth/useAuth";
 import LoginPage from "@/features/auth/LoginPage";
-import GroupPage from "@/features/groups/GroupPage";
 import QuestPage from "@/features/quests/QuestPage";
 import UploadPage from "@/features/upload/UploadPage";
 import ProfilePage from "@/features/profile/ProfilePage";
@@ -23,8 +22,7 @@ function AppRoutes() {
   return (
     <>
       <Routes>
-        <Route path="/" element={user && !loading ? <Navigate to="/group" replace /> : <LoginPage />} />
-        <Route path="/group" element={<ProtectedRoute><GroupPage /></ProtectedRoute>} />
+        <Route path="/" element={user && !loading ? <Navigate to="/quest" replace /> : <LoginPage />} />
         <Route path="/quest" element={<ProtectedRoute><QuestPage /></ProtectedRoute>} />
         <Route path="/upload" element={<ProtectedRoute><UploadPage /></ProtectedRoute>} />
         <Route path="/profile" element={<ProtectedRoute><ProfilePage /></ProtectedRoute>} />
