@@ -137,12 +137,52 @@ export default function QuestPage() {
     const expiresAt = new Date();
     expiresAt.setHours(expiresAt.getHours() + 24);
 
+    // Find or create a quest row matching this side quest, and require user group
+    const { data: membership } = await supabase
+      .from('group_members')
+      .select('group_id')
+      .eq('user_id', user.id)
+      .limit(1)
+      .maybeSingle();
+
+    if (!membership) {
+      toast.error('Join or create a group first');
+      setSubmitting(false);
+      return;
+    }
+
+    // Upsert quest by title
+    let questRow: { id: string } | null = null;
+    const { data: existingQuest } = await supabase
+      .from('quests')
+      .select('id')
+      .eq('title', currentQuest.title)
+      .maybeSingle();
+    if (existingQuest) {
+      questRow = existingQuest;
+    } else {
+      const { data: inserted, error: qErr } = await supabase
+        .from('quests')
+        .insert({
+          title: currentQuest.title,
+          description: currentQuest.description,
+          category: currentQuest.category,
+          points_value: currentQuest.points_value,
+        })
+        .select('id')
+        .single();
+      if (qErr || !inserted) {
+        toast.error('Failed to create quest');
+        setSubmitting(false);
+        return;
+      }
+      questRow = inserted;
+    }
+
     const { error } = await supabase.from('active_quests').insert({
       user_id: user.id,
-      quest_id: currentQuest.id,
-      quest_title: currentQuest.title,
-      quest_description: currentQuest.description,
-      points_value: currentQuest.points_value,
+      quest_id: questRow.id,
+      group_id: membership.group_id,
       status: 'active',
       expires_at: expiresAt.toISOString(),
     });

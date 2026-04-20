@@ -43,7 +43,7 @@ export default function UploadPage() {
       try {
         const { data: aq, error } = await supabase
           .from('active_quests')
-          .select('*')
+          .select('*, quests(title, description, points_value)')
           .eq('user_id', user.id)
           .eq('status', 'active')
           .order('started_at', { ascending: false })
@@ -59,7 +59,18 @@ export default function UploadPage() {
           return;
         }
 
-        setActiveQuest(aq);
+        const quest = (aq as any).quests;
+        setActiveQuest({
+          id: aq.id,
+          user_id: aq.user_id,
+          quest_id: aq.quest_id,
+          quest_title: quest?.title ?? 'Quest',
+          quest_description: quest?.description ?? '',
+          points_value: quest?.points_value ?? 0,
+          status: aq.status,
+          expires_at: aq.expires_at,
+          completed_at: aq.completed_at,
+        });
       } catch (err) {
         console.error('Unexpected error:', err);
       } finally {
